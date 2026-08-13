@@ -32,8 +32,8 @@ class _RateAppDialogState extends State<RateAppDialog> {
           filter: ImageFilter.blur(sigmaX: 54.37, sigmaY: 54.37),
           child: Container(
             width: 270,
-            height: 273.5,
-            padding: const EdgeInsets.only(top: 26),
+            height: 274,
+            padding: const EdgeInsets.only(top: 22),
             decoration: BoxDecoration(
               color: const Color(0xFF1E1E1E).withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(14),
@@ -46,7 +46,7 @@ class _RateAppDialogState extends State<RateAppDialog> {
                   height: 64,
                   width: 64,
                 ),
-                const SizedBox(height: 31),
+                const SizedBox(height: 26),
                 Text('Rate the app', style: AppTextStyles.title),
                 const SizedBox(height: 11),
                 Padding(
@@ -57,7 +57,7 @@ class _RateAppDialogState extends State<RateAppDialog> {
                     style: AppTextStyles.footnote,
                   ),
                 ),
-                const SizedBox(height: 17),
+                const SizedBox(height: 15),
                 const Divider(color: AppColors.bgLevel2, height: 1,),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

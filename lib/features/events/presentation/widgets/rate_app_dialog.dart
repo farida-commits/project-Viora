@@ -1,0 +1,129 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:viora/core/theme/app_colors.dart';
+import 'package:viora/core/theme/app_text_styles.dart';
+
+void showRateAppDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (_) => const RateAppDialog(),
+  );
+}
+
+class RateAppDialog extends StatefulWidget {
+  const RateAppDialog({super.key});
+
+  @override
+  State<RateAppDialog> createState() => _RateAppDialogState();
+}
+
+class _RateAppDialogState extends State<RateAppDialog> {
+  int _stars = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 54.37, sigmaY: 54.37),
+          child: Container(
+            width: 270,
+            height: 273.5,
+            padding: const EdgeInsets.only(top: 26),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E).withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/ocenka.png',
+                  height: 64,
+                  width: 64,
+                ),
+                const SizedBox(height: 31),
+                Text('Rate the app', style: AppTextStyles.title),
+                const SizedBox(height: 11),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Tap a star to rate. You can also leave a \ncomment',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.footnote,
+                  ),
+                ),
+                const SizedBox(height: 17),
+                const Divider(color: AppColors.bgLevel2, height: 1,),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    final filled = i < _stars;
+                    return IconButton(
+                      onPressed: () => setState(() => _stars = i + 1),
+                      icon: Icon(
+                        filled ? Icons.star : Icons.star_border,
+                        color: const Color(0xFF0A84FF),
+                      ),
+                    );
+                  }),
+                ),
+                // SizedBox(height: 10,),
+                const Divider(color: AppColors.bgLevel2, height: 1,),
+                IntrinsicHeight(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            splashFactory: NoSplash.splashFactory,
+                            overlayColor: Colors.transparent,
+                            shape: const RoundedRectangleBorder(),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Cancel', 
+                            style: TextStyle(
+                              color: Color(0xFF0A84FF),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const VerticalDivider(color: AppColors.bgLevel2, width: 5),
+                      Expanded(
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            splashFactory: NoSplash.splashFactory,
+                            overlayColor: Colors.transparent,
+                            shape: const RoundedRectangleBorder(),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              color: Color(0xFF0A84FF), 
+                              fontWeight: FontWeight.w600,
+                              fontSize: 17
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

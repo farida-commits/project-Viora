@@ -72,8 +72,8 @@ class _RateAppDialogState extends State<RateAppDialog> {
                     );
                   }),
                 ),
-                // SizedBox(height: 10,),
-                const Divider(color: AppColors.bgLevel2, height: 1,),
+                SizedBox(height: 8,),
+                const Divider(color: AppColors.bgLevel2, height: 2,),
                 IntrinsicHeight(
                   child: Row(
                     children: [
@@ -95,7 +95,7 @@ class _RateAppDialogState extends State<RateAppDialog> {
                           ),
                         ),
                       ),
-                      const VerticalDivider(color: AppColors.bgLevel2, width: 5),
+                      const VerticalDivider(color: AppColors.bgLevel2,),
                       Expanded(
                         child: TextButton(
                           style: TextButton.styleFrom(

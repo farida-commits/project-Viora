@@ -1,3 +1,5 @@
+// lib/providers/event_provider.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:viora/features/events/domain/entities/event.dart';
 
@@ -8,7 +10,7 @@ class EventProvider extends ChangeNotifier {
   List<Event> get events => List.unmodifiable(_events);
   String get query => _query;
 
-  bool get showSearchc => _events.length > 5;
+  bool get showSearch => _events.length > 5;
 
   List<Event> get _filtered {
     if (_query.trim().isEmpty) return _events;
@@ -33,7 +35,7 @@ class EventProvider extends ChangeNotifier {
       ..sort((a, b) => a.date.compareTo(b.date));
     return list;
   }
-  
+
   bool get hasResults => upcomingThisWeek.isNotEmpty || others.isNotEmpty;
 
   void setQuery(String q) {
@@ -43,6 +45,12 @@ class EventProvider extends ChangeNotifier {
 
   void add(Event event) {
     _events.add(event);
+    notifyListeners();
+  }
+
+  void update(Event event) {
+    final i = _events.indexWhere((e) => e.id == event.id);
+    if (i != -1) _events[i] = event;
     notifyListeners();
   }
 

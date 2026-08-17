@@ -9,6 +9,7 @@ import 'package:viora/features/settings/settings_screen.dart';
 import 'package:viora/features/events/presentation/widgets/rate_app_dialog.dart';
 import 'package:viora/features/events/presentation/widgets/event_card.dart';
 import 'package:viora/features/events/presentation/widgets/upcoming_event_card.dart';
+import 'package:viora/features/events/presentation/screens/add_edit_event_screen.dart';
 import 'package:viora/providers/event_provider.dart';
 
 class EventsMainScreen extends StatefulWidget {
@@ -115,7 +116,11 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('EVENTS', style: AppTextStyles.headline),
-                      _AddButton(onTap: _onAddTap),
+                      _AddButton(onTap: () {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => const AddEditEventScreen()),
+  );
+}),
                     ],
                   ),
                 ),
@@ -134,7 +139,7 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8,),
-                if (provider.showSearchc) ...[
+                if (provider.showSearch) ...[
                   Row(
                     children: [
                       Expanded(
@@ -144,7 +149,11 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                         ),
                       ),
                       const SizedBox(width: 12,),
-                      _AddButton(onTap: _onAddTap),
+                      _AddButton(onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AddEditEventScreen()),
+                        );
+                      }),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -156,7 +165,11 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                       Text(
                         'EVENTS',
                         style: AppTextStyles.headline),
-                        _AddButton(onTap: _onAddTap),
+                        _AddButton(onTap: () {
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (_) => const AddEditEventScreen()),
+  );
+}),
                     ],
                   ),
                   const SizedBox(height: 16,),

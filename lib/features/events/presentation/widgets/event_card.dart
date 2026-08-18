@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
+import 'package:viora/core/widgets/event_image.dart';
 import '../../domain/entities/event.dart';
 
 class EventCard extends StatelessWidget {
@@ -25,9 +26,9 @@ class EventCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        height: 180,
+        height: 159.2,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           color: hasImage ? null : AppColors.bgLevel2,
         ),
         clipBehavior: Clip.antiAlias,
@@ -35,7 +36,7 @@ class EventCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (hasImage)
-              Image.asset(event.imageAsset!, fit: BoxFit.cover),
+              EventImage(path: event.imageAsset!, fit: BoxFit.cover),
             if (hasImage)
               DecoratedBox(
                 decoration: BoxDecoration(
@@ -72,7 +73,7 @@ class EventCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${event.tasksDone}/${event.tasksTotal} tasks done',
-                      style: AppTextStyles.footnote,
+                      style: AppTextStyles.caption,
                     ),
                   ],
                 ],

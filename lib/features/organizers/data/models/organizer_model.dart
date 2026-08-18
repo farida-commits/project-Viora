@@ -15,6 +15,7 @@ class OrganizerModel extends HiveObject {
     required this.specialization,
     required this.currentEventIds,
     required this.pastEventIds,
+    this.photoPath,
   });
 
   @HiveField(0)
@@ -32,13 +33,14 @@ class OrganizerModel extends HiveObject {
   @HiveField(4)
   final String specialization;
 
-  /// id ивентов, в которых организатор участвует сейчас (для календаря)
   @HiveField(5)
   final List<String> currentEventIds;
 
-  /// id ивентов из истории
   @HiveField(6)
   final List<String> pastEventIds;
+
+  @HiveField(7)
+  final String? photoPath;
 
   Organizer toEntity() => Organizer(
         id: id,
@@ -48,6 +50,7 @@ class OrganizerModel extends HiveObject {
         specialization: specialization,
         currentEventIds: currentEventIds,
         pastEventIds: pastEventIds,
+        photoPath: photoPath,
       );
 
   factory OrganizerModel.fromEntity(Organizer o) => OrganizerModel(
@@ -58,5 +61,6 @@ class OrganizerModel extends HiveObject {
         specialization: o.specialization,
         currentEventIds: o.currentEventIds,
         pastEventIds: o.pastEventIds,
+        photoPath: o.photoPath,
       );
 }

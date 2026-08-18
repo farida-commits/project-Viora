@@ -24,13 +24,14 @@ class OrganizerModelAdapter extends TypeAdapter<OrganizerModel> {
       specialization: fields[4] as String,
       currentEventIds: (fields[5] as List).cast<String>(),
       pastEventIds: (fields[6] as List).cast<String>(),
+      photoPath: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, OrganizerModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class OrganizerModelAdapter extends TypeAdapter<OrganizerModel> {
       ..writeByte(5)
       ..write(obj.currentEventIds)
       ..writeByte(6)
-      ..write(obj.pastEventIds);
+      ..write(obj.pastEventIds)
+      ..writeByte(7)
+      ..write(obj.photoPath);
   }
 
   @override

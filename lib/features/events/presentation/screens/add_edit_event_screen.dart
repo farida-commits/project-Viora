@@ -15,6 +15,10 @@ import 'package:viora/features/events/domain/entities/expense.dart';
 import 'package:viora/features/events/presentation/widgets/select_organizers_sheet.dart';
 import 'package:viora/providers/event_provider.dart';
 import 'package:viora/providers/organizer_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
+import 'package:viora/features/organizers/domain/entities/organizer.dart';
+import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
 
 // добавь в начало файла
 class _CapitalizeFirstLetterFormatter extends TextInputFormatter {
@@ -83,9 +87,10 @@ Future<T?> _showCenteredPicker<T>(BuildContext context, Widget child) {
 }
 
 class AddEditEventScreen extends StatefulWidget {
-  const AddEditEventScreen({super.key, this.initial});
+  const AddEditEventScreen({super.key, this.initial, this.initialTabIndex = 0});
 
   final Event? initial;
+  final int initialTabIndex;
 
   @override
   State<AddEditEventScreen> createState() => _AddEditEventScreenState();
@@ -126,7 +131,7 @@ class _ExpenseDraft {
   Expense toEntity() => Expense(
         id: id,
         title: titleCtrl.text.trim(),
-        price: double.tryParse(priceCtrl.text.trim()) ?? 0,
+        price: double.tryParse(priceCtrl.text.replaceAll(',', '').trim()) ?? 0,
         date: date,
       );
 }
@@ -148,7 +153,8 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
   final List<_ExpenseDraft> _expenses = [];
   final List<String> _organizerIds = [];
 
-  int _tabIndex = 0;
+  
+  int _tabIndex = 0;  
   bool _dirty = false;
   int _idCounter = 0;
 
@@ -162,6 +168,8 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
   @override
   void initState() {
     super.initState();
+    _tabIndex = widget.initialTabIndex; 
+    
     final e = widget.initial;
     _titleCtrl = TextEditingController(text: e?.title ?? '');
     _locationCtrl = TextEditingController(text: e?.location ?? '');
@@ -251,6 +259,20 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
     if (!mounted) return;
     _showDeniedDialog();
   }
+}
+
+  String _getNextEventText(Organizer organizer) {
+  if (organizer.nextEventDate == null) return '';
+  final dateStr = DateFormat('d MMM').format(organizer.nextEventDate!);
+  final nextEventId = organizer.currentEventIds.isNotEmpty
+      ? organizer.currentEventIds.first
+      : null;
+  String eventTitle = '';
+  if (nextEventId != null) {
+    final event = mockEvents[nextEventId];
+    if (event != null) eventTitle = event.title;
+  }
+  return eventTitle.isNotEmpty ? '$dateStr — $eventTitle' : dateStr;
 }
 
 // для разрешения фото
@@ -533,25 +555,91 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
 
   // ---------- выход / сохранение / удаление ----------
 
-  Future<bool> _confirmExit() async {
-    if (!_dirty) return true;
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('Unsaved Changes Detected', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'You have unsaved changes. Are you sure you want to exit without saving?',
-          style: TextStyle(color: Colors.white70),
+Future<bool> _confirmExit() async {
+  if (!_dirty) return true;
+  final result = await showDialog<bool>(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (_) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Container(
+            width: 270,
+            padding: const EdgeInsets.only(top: 20,),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E).withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Unsaved Changes Detected',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'You have unsaved changes. Are you \nsure you want to exit without saving?',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.footnote,
+                ),
+                const SizedBox(height: 16),
+                const Divider(color: AppColors.bgLevel2, height: 1),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          splashFactory: NoSplash.splashFactory,
+                          overlayColor: Colors.transparent,
+                        ),
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text(
+                          'Stay',
+                          style: TextStyle(
+                            color: Color(0xff0A84FF),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w400,
+                            fontFamily: AppTextStyles.fontFamily,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(width: 1, height: 44, color: AppColors.bgLevel2),
+                    Expanded(
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          splashFactory: NoSplash.splashFactory,
+                          overlayColor: Colors.transparent,
+                        ),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text(
+                          'Exit',
+                          style: TextStyle(
+                            color: Color(0xff0A84FF),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppTextStyles.fontFamily,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Stay')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Exit')),
-        ],
       ),
-    );
-    return result ?? false;
-  }
+    ),
+  );
+  return result ?? false;
+}
 
   void _save() {
     if (!_canSave) return;
@@ -566,7 +654,7 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
       description: _descCtrl.text.trim(),
       clientNotes: List.of(_clientNotes),
       tasks: _tasks.map((t) => t.toEntity()).toList(),
-      budget: double.tryParse(_budgetCtrl.text.trim()) ?? 0,
+      budget: double.tryParse(_budgetCtrl.text.replaceAll(',', '').trim()) ?? 0,
       expenses: _expenses.map((e) => e.toEntity()).toList(),
       organizerIds: List.of(_organizerIds),
     );
@@ -889,12 +977,18 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 44,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.warning,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),              
+              label: Text(
+                'Delete Event', 
+                style: AppTextStyles.body.copyWith(
+                color: Colors.white
                 ),
               ),
               onPressed: _confirmDelete,
@@ -903,12 +997,6 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
                 width: 20,
                 height: 20,
                 color: Colors.white,
-              ),
-              label: Text(
-                'Delete Event', 
-                style: AppTextStyles.body.copyWith(
-                color: Colors.white
-                ),
               ),
             ),
           ),
@@ -1431,15 +1519,34 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(radius: 22, backgroundColor: AppColors.primary.withValues(alpha: 0.3)),
+                OrganizerAvatar(
+                  photoPath: o.photoPath,
+                  size: 64,
+                  borderRadius: 24,
+                  placeholderIconSize: 20,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(o.position, style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
+                      const SizedBox(height: 4),
                       Text(o.name, style: AppTextStyles.body),
+                      if (o.nextEventDate != null) ...[
+                        const SizedBox(height: 4,),
+                        Text(
+                          'Next Event:',
+                        style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel2),
+                        ),
+                        const SizedBox(height: 2,),
+                        Text(
+                          _getNextEventText(o),
+                          style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel1),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1452,7 +1559,6 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
                     'assets/images/delete.png',
                     width: 20,
                     height: 20,
-                    color: AppColors.warning,
                   ),
                 ),
               ],

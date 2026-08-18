@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
+import 'package:viora/core/widgets/event_image.dart';
 import '../../domain/entities/event.dart';
 
 class UpcomingEventCard extends StatelessWidget {
@@ -24,18 +25,18 @@ class UpcomingEventCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 170,
-        height: 140,
+        width: 265,
+        height: 123,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           color: hasImage ? null : AppColors.bgLevel2,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (hasImage) Image.asset(event.imageAsset!, fit: BoxFit.cover),
+            if (hasImage) EventImage(path: event.imageAsset!, fit: BoxFit.cover),
             if (hasImage)
               DecoratedBox(
                 decoration: BoxDecoration(

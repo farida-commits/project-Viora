@@ -6,12 +6,28 @@ import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 import 'package:viora/core/widgets/app_bottom_nav.dart';
 import 'package:viora/features/events/presentation/screens/events_main_screen.dart';
+import 'package:viora/features/organizers/presentation/screens/add_edit_organizer_screen.dart';
+import 'package:viora/features/organizers/presentation/screens/organizer_info_screen.dart';
 import 'package:viora/features/settings/settings_screen.dart';
 import 'package:viora/providers/organizer_provider.dart';
 import '../widgets/organizer_card.dart';
 
-class OrganizersMainScreen extends StatelessWidget {
+class OrganizersMainScreen extends StatefulWidget {
   const OrganizersMainScreen({super.key});
+
+  @override
+  State<OrganizersMainScreen> createState() => _OrganizersMainScreenState();
+}
+
+class _OrganizersMainScreenState extends State<OrganizersMainScreen> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   void _onTabTap(BuildContext context, AppTab tab) {
     switch (tab) {
@@ -32,7 +48,14 @@ class OrganizersMainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final organizers = context.watch<OrganizerProvider>().organizers;
+    final allOrganizers = context.watch<OrganizerProvider>().organizers;
+    final showSearch = allOrganizers.length > 5;
+
+    final organizers = _query.isEmpty
+        ? allOrganizers
+        : allOrganizers
+              .where((o) => o.name.toLowerCase().contains(_query.toLowerCase()))
+              .toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgLevel1,
@@ -40,52 +63,89 @@ class OrganizersMainScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Фон
           Image.asset('assets/images/fon.png', fit: BoxFit.cover),
 
-          // 2. Фото по центру с градиентным исчезновением сверху/снизу
-          Center(
-            child: FractionallySizedBox(
-              widthFactor: 1.0,
-              child: ShaderMask(
-                shaderCallback: (rect) {
-                  return LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent, // верх фото исчезает
-                      Colors.black,
-                      Colors.black,
-                      Colors.transparent, // низ фото исчезает
-                    ],
-                    stops: const [0.0, 0.1919, 0.853, 1.0],
-                  ).createShader(rect);
-                },
-                blendMode: BlendMode.dstIn,
-                child: Image.asset(
-                  'assets/images/organizers_photo.png',
-                  fit: BoxFit.contain,
+          if (allOrganizers.isEmpty)
+            Center(
+              child: FractionallySizedBox(
+                widthFactor: 1.0,
+                child: ShaderMask(
+                  shaderCallback: (rect) {
+                    return const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black,
+                        Colors.black,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.1919, 0.853, 1.0],
+                    ).createShader(rect);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: Image.asset(
+                    'assets/images/organizers_photo.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('ORGANIZERS', style: AppTextStyles.headline),
-                    _AddButton(onTap: () {}),
-                  ],
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('ORGANIZERS', style: AppTextStyles.headline),
+                      _AddButton(onTap: () => showAddEditOrganizerDialog(context)),
+                    ],
+                  ),
                 ),
-              ),
+                if (showSearch)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _SearchField(
+                      controller: _searchController,
+                      onChanged: (v) => setState(() => _query = v),
+                    ),
+                  ),
+                if (allOrganizers.isNotEmpty)
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.only(top: 8, bottom: 16),
+                      itemCount: organizers.length,
+                      separatorBuilder: (_, __) => const Divider(
+                        color: AppColors.txtLevel3,
+                        height: 1,
+                        indent: 20,
+                        endIndent: 20,
+                      ),
+                      itemBuilder: (context, index) {
+                        final organizer = organizers[index];
+                        return OrganizerCard(
+                          organizer: organizer,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => OrganizerInfoScreen(
+                                  organizerId: organizer.id,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -93,6 +153,51 @@ class OrganizersMainScreen extends StatelessWidget {
       bottomNavigationBar: AppBottomNav(
         current: AppTab.organizers,
         onTap: (tab) => _onTabTap(context, tab),
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField({required this.controller, required this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: AppColors.bgLevel2,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              style: AppTextStyles.body.copyWith(color: AppColors.txtLevel1),
+              decoration: InputDecoration(
+                hintText: 'Search',
+                hintStyle: AppTextStyles.body.copyWith(
+                  color: AppColors.txtLevel3,
+                ),
+                border: InputBorder.none,
+                isCollapsed: true,
+              ),
+            ),
+          ),
+          Image.asset(
+            'assets/images/search.png', 
+            color: AppColors.txtLevel3, 
+            width: 20,
+            height: 20,
+          ),
+        ],
       ),
     );
   }
@@ -115,7 +220,7 @@ class _AddButton extends StatelessWidget {
           color: AppColors.primary,
         ),
         child: Image.asset(
-          'assets/images/plus.png', 
+          'assets/images/plus.png',
           color: Colors.white,
           height: 20,
           width: 20,

@@ -1,11 +1,13 @@
 // lib/features/events/presentation/widgets/select_organizers_sheet.dart
-
+import 'package:intl/intl.dart'; 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 import 'package:viora/providers/organizer_provider.dart';
 import 'package:viora/features/organizers/domain/entities/organizer.dart';
+import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
+import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
 
 /// Возвращает обновлённый список выбранных id организаторов,
 /// либо null если пользователь закрыл без сохранения.
@@ -42,11 +44,18 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
         : organizers
             .where((o) => o.name.toLowerCase().contains(_query.toLowerCase()))
             .toList();
+    
+    final hasOrganizers = organizers.isNotEmpty;
+    final hasSelected = _selected.isNotEmpty; 
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.92,
+      
       decoration: const BoxDecoration(
-        color: Color(0xFF1A0F1D),
+        image: DecorationImage(     
+          image: const AssetImage('assets/images/fon.png'),
+          fit: BoxFit.cover,
+        ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -88,7 +97,9 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.of(context).pop(_selected.toList()),
+                    onTap: hasSelected
+                    ? () => Navigator.of(context).pop(_selected.toList())
+                    : null,
                     child: Container(
                       width: 36,
                       height: 36,
@@ -96,7 +107,7 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
                       child: Center(
                         child: Image.asset(
                           'assets/images/save.png', 
-                          color: Colors.white,
+                          color:  hasSelected ? Colors.white : AppColors.txtLevel3,
                           width: 20,
                           height: 20,
                         ),
@@ -115,7 +126,7 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: AppColors.bgLevel2,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                   child: Row(
                     children: [
@@ -123,7 +134,8 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
                         child: TextField(
                           onChanged: (v) => setState(() => _query = v),
                           style: AppTextStyles.body,
-                          cursorColor: AppColors.primary,
+                          cursorColor: Colors.white,
+                          cursorHeight: 19,
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             isCollapsed: true,
@@ -153,7 +165,10 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
                     )
                   : filtered.isEmpty
                       ? Center(
-                          child: Text('Nothing was found...', style: AppTextStyles.footnote),
+                          child: Text(
+                            'Nothing was found...', 
+                            style: AppTextStyles.body.copyWith(color: Colors.white)                            
+                          ),
                         )
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -180,11 +195,47 @@ class _SelectOrganizersSheetState extends State<_SelectOrganizersSheet> {
 }
 
 class _OrganizerRow extends StatelessWidget {
-  const _OrganizerRow({required this.organizer, required this.checked, required this.onTap});
+  const _OrganizerRow({
+    required this.organizer, 
+    required this.checked, 
+    required this.onTap
+  });  
 
   final Organizer organizer;
   final bool checked;
   final VoidCallback onTap;
+
+    // 🔥 ФОРМАТТОО ФУНКЦИЯСЫ
+  String _getNextEventText(Organizer organizer) {
+    // 1. Датаны текшеребиз
+    if (organizer.nextEventDate == null) return '';
+    
+    // 2. Датаны форматтайбыз
+    final dateStr = DateFormat('d MMM').format(organizer.nextEventDate!);
+    
+    // 3. Ивенттин ID'син алабыз
+    final nextEventId = organizer.currentEventIds.isNotEmpty
+        ? organizer.currentEventIds.first
+        : null;
+    
+    // 4. Ивенттин атын алабыз (mockEvents ден)
+    String eventTitle = '';
+    if (nextEventId != null) {
+      try {
+        final event = mockEvents[nextEventId];
+        if (event != null) {
+          eventTitle = event.title;
+        }
+      } catch (e) {
+        // mockEvents жок болсо, катаны көз жаздырабыз
+      }
+    }
+    
+    // 5. Форматталган текстти кайтарабыз
+    return eventTitle.isNotEmpty 
+        ? '$dateStr — $eventTitle'  // "12 Jun — Alice & Tom Wedding"
+        : dateStr;                   // "12 Jun"
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -193,29 +244,57 @@ class _OrganizerRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 22,
-            height: 22,
+            width: 20,
+            height: 20,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(color: AppColors.primary, width: 2),
               color: checked ? AppColors.primary : Colors.transparent,
             ),
-            child: checked ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+            child: checked ? const Icon(
+              Icons.check, 
+              size: 14, 
+              color: Colors.white,
+            ) : null,
           ),
           const SizedBox(width: 12),
-          CircleAvatar(radius: 22, backgroundColor: AppColors.primary.withValues(alpha: 0.3)),
+          OrganizerAvatar(
+            photoPath: organizer.photoPath, 
+            size: 64,
+            borderRadius: 24,
+            placeholderIconSize: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(organizer.position, style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
-                Text(organizer.name, style: AppTextStyles.body),
-                if (organizer.nextEventDate != null)
-                  Text(
-                    'Next Event: ${organizer.nextEventDate}',
-                    style: AppTextStyles.caption,
+                Text(
+                  organizer.position, 
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.primary,
                   ),
+                ),
+                SizedBox(height: 4,),
+                Text(
+                  organizer.name, 
+                  style: AppTextStyles.body,
+                ),
+                SizedBox(height: 4,),
+                if (organizer.nextEventDate != null) ...[
+                  Text(
+                    'Next Event:',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.txtLevel2,
+                    ),
+                  ),
+                  SizedBox(height: 4,),
+                  Text(
+                    _getNextEventText(organizer),
+                    style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel1),
+                  )
+                ]
               ],
             ),
           ),

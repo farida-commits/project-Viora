@@ -12,6 +12,7 @@ import 'package:viora/features/events/presentation/widgets/upcoming_event_card.d
 import 'package:viora/features/events/presentation/screens/add_edit_event_screen.dart';
 import 'package:viora/providers/event_provider.dart';
 import 'package:viora/features/events/presentation/screens/event_details_screen.dart';
+import 'package:viora/core/utils/slide_route.dart';
 
 class EventsMainScreen extends StatefulWidget {
   const EventsMainScreen({super.key});
@@ -40,21 +41,21 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
   }
 
   void _onTabTap(AppTab tab) {
-    switch (tab) {
-      case AppTab.events:
-        break;
-      case AppTab.organizers:
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OrganizersMainScreen()),
-        );
-        break;
-      case AppTab.settings:
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-        );
-        break;
-    }
+  switch (tab) {
+    case AppTab.events:
+      break;
+    case AppTab.organizers:
+      Navigator.of(context).pushReplacement(
+        slideRoute(const OrganizersMainScreen(), fromRight: true),
+      );
+      break;
+    case AppTab.settings:
+      Navigator.of(context).pushReplacement(
+        slideRoute(const SettingsScreen(), fromRight: true),
+      );
+      break;
   }
+}
 
   void _onAddTap() {
     // TODO: переход на Add / Edit Event
@@ -118,7 +119,7 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                       Text('EVENTS', style: AppTextStyles.headline),
                       _AddButton(onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AddEditEventScreen()),
+                          slideRoute(const AddEditEventScreen()),
                         );
                       }),
                     ],
@@ -155,7 +156,7 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                         const SizedBox(width: 12,),
                         _AddButton(onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const AddEditEventScreen()),
+                            slideRoute(const AddEditEventScreen()),
                           );
                         }),
                       ],
@@ -171,7 +172,7 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                           style: AppTextStyles.headline),
                           _AddButton(onTap: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const AddEditEventScreen()),
+                              slideRoute(const AddEditEventScreen()),
                             );
                           }),
                       ],

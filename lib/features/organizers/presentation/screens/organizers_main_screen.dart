@@ -6,11 +6,12 @@ import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 import 'package:viora/core/widgets/app_bottom_nav.dart';
 import 'package:viora/features/events/presentation/screens/events_main_screen.dart';
-import 'package:viora/features/organizers/presentation/screens/add_edit_organizer_screen.dart';
-import 'package:viora/features/organizers/presentation/screens/organizer_info_screen.dart';
 import 'package:viora/features/settings/settings_screen.dart';
 import 'package:viora/providers/organizer_provider.dart';
 import '../widgets/organizer_card.dart';
+import 'add_edit_organizer_screen.dart';
+import 'organizer_info_screen.dart';
+import 'package:viora/core/utils/slide_route.dart';
 
 class OrganizersMainScreen extends StatefulWidget {
   const OrganizersMainScreen({super.key});
@@ -30,21 +31,21 @@ class _OrganizersMainScreenState extends State<OrganizersMainScreen> {
   }
 
   void _onTabTap(BuildContext context, AppTab tab) {
-    switch (tab) {
-      case AppTab.events:
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const EventsMainScreen()),
-        );
-        break;
-      case AppTab.organizers:
-        break;
-      case AppTab.settings:
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-        );
-        break;
-    }
+  switch (tab) {
+    case AppTab.events:
+      Navigator.of(context).pushReplacement(
+        slideRoute(const EventsMainScreen(), fromRight: false),
+      );
+      break;
+    case AppTab.organizers:
+      break;
+    case AppTab.settings:
+      Navigator.of(context).pushReplacement(
+        slideRoute(const SettingsScreen(), fromRight: true),
+      );
+      break;
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +55,8 @@ class _OrganizersMainScreenState extends State<OrganizersMainScreen> {
     final organizers = _query.isEmpty
         ? allOrganizers
         : allOrganizers
-              .where((o) => o.name.toLowerCase().contains(_query.toLowerCase()))
-              .toList();
+            .where((o) => o.name.toLowerCase().contains(_query.toLowerCase()))
+            .toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgLevel1,
@@ -97,33 +98,44 @@ class _OrganizersMainScreenState extends State<OrganizersMainScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('ORGANIZERS', style: AppTextStyles.headline),
-                      _AddButton(onTap: () => showAddEditOrganizerDialog(context)),
-                    ],
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: showSearch
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: _SearchField(
+                                controller: _searchController,
+                                onChanged: (v) => setState(() => _query = v),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _AddButton(
+                              onTap: () => showAddEditOrganizerDialog(context),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('ORGANIZERS', style: AppTextStyles.headline),
+                            _AddButton(
+                              onTap: () => showAddEditOrganizerDialog(context),
+                            ),
+                          ],
+                        ),
                 ),
                 if (showSearch)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _SearchField(
-                      controller: _searchController,
-                      onChanged: (v) => setState(() => _query = v),
-                    ),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 300, 8),
+                    child: Text('ORGANIZERS', style: AppTextStyles.headline),
                   ),
                 if (allOrganizers.isNotEmpty)
                   Expanded(
                     child: ListView.separated(
-                      padding: const EdgeInsets.only(top: 8, bottom: 16),
+                      padding: const EdgeInsets.only(top: 8, bottom: 100),
                       itemCount: organizers.length,
-                      separatorBuilder: (_, __) => const Divider(
-                        color: AppColors.txtLevel3,
+                      separatorBuilder: (_, __) => Divider(
+                        color: Colors.white.withValues(alpha: 0.03),
                         height: 1,
                         indent: 20,
                         endIndent: 20,
@@ -168,11 +180,10 @@ class _SearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 44,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.bgLevel2,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
         children: [
@@ -183,20 +194,13 @@ class _SearchField extends StatelessWidget {
               style: AppTextStyles.body.copyWith(color: AppColors.txtLevel1),
               decoration: InputDecoration(
                 hintText: 'Search',
-                hintStyle: AppTextStyles.body.copyWith(
-                  color: AppColors.txtLevel3,
-                ),
+                hintStyle: AppTextStyles.body.copyWith(color: AppColors.txtLevel3),
                 border: InputBorder.none,
                 isCollapsed: true,
               ),
             ),
           ),
-          Image.asset(
-            'assets/images/search.png', 
-            color: AppColors.txtLevel3, 
-            width: 20,
-            height: 20,
-          ),
+          const Icon(Icons.search, color: AppColors.txtLevel3, size: 20),
         ],
       ),
     );

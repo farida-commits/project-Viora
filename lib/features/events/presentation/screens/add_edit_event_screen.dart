@@ -16,9 +16,9 @@ import 'package:viora/features/events/presentation/widgets/select_organizers_she
 import 'package:viora/providers/event_provider.dart';
 import 'package:viora/providers/organizer_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
 import 'package:viora/features/organizers/domain/entities/organizer.dart';
 import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
+import 'package:viora/features/organizers/domain/utils/organizer_events.dart';
 
 // добавь в начало файла
 class _CapitalizeFirstLetterFormatter extends TextInputFormatter {
@@ -269,7 +269,8 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
       : null;
   String eventTitle = '';
   if (nextEventId != null) {
-    final event = mockEvents[nextEventId];
+    final eventProvider = context.read<EventProvider>();
+    final event = eventProvider.events.where((e) => e.id == nextEventId).firstOrNull;
     if (event != null) eventTitle = event.title;
   }
   return eventTitle.isNotEmpty ? '$dateStr — $eventTitle' : dateStr;
@@ -1511,59 +1512,66 @@ Future<bool> _confirmExit() async {
         const Divider(color: Colors.white12,),
         const SizedBox(height: 12),
         for (final o in selected)
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.bgLevel2,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                OrganizerAvatar(
-                  photoPath: o.photoPath,
-                  size: 64,
-                  borderRadius: 24,
-                  placeholderIconSize: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(o.position, style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
-                      const SizedBox(height: 4),
-                      Text(o.name, style: AppTextStyles.body),
-                      if (o.nextEventDate != null) ...[
-                        const SizedBox(height: 4,),
-                        Text(
-                          'Next Event:',
-                        style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel2),
-                        ),
-                        const SizedBox(height: 2,),
-                        Text(
-                          _getNextEventText(o),
-                          style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel1),
-                        ),
+          Builder(
+            builder: (context) {
+              final eventProvider = context.watch<EventProvider>();
+              final nextEventText = organizerNextEventText(eventProvider, o.id);
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.bgLevel2,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  OrganizerAvatar(
+                    photoPath: o.photoPath,
+                    size: 64,
+                    borderRadius: 24,
+                    placeholderIconSize: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(o.position, style: AppTextStyles.caption.copyWith(color: AppColors.primary)),
+                        const SizedBox(height: 4),
+                        Text(o.name, style: AppTextStyles.body),
+                        if (nextEventText.isNotEmpty) ...[
+                          const SizedBox(height: 4,),
+                          Text(
+                            'Next Event:',
+                          style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel2),
+                          ),
+                          const SizedBox(height: 2,),
+                          Text(
+                            nextEventText,
+                            style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel1),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () => setState(() {
-                    _organizerIds.remove(o.id);
-                    _dirty = true;
-                  }),
-                  child: Image.asset(
-                    'assets/images/delete.png',
-                    width: 20,
-                    height: 20,
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _organizerIds.remove(o.id);
+                      _dirty = true;
+                    }),
+                    child: Image.asset(
+                      'assets/images/delete.png',
+                      width: 20,
+                      height: 20,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }

@@ -2,11 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 import 'package:viora/features/organizers/domain/entities/organizer.dart';
-import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
 import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
+import 'package:viora/providers/event_provider.dart';
 
 class OrganizerCard extends StatelessWidget {
   const OrganizerCard({
@@ -20,23 +21,26 @@ class OrganizerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = organizer.nextEventDate != null
-        ? DateFormat('d MMM').format(organizer.nextEventDate!)
-        : null;
+    final allEvents = context.watch<EventProvider>().events;
 
-    final nextEventId = organizer.currentEventIds.isNotEmpty
-        ? organizer.currentEventIds.first
-        : null;
-    final eventTitle = nextEventId != null
-        ? mockEvents[nextEventId]?.title
-        : null;
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    final upcoming = allEvents
+        .where((e) => e.organizerIds.contains(organizer.id))
+        .where((e) => !DateTime(e.date.year, e.date.month, e.date.day).isBefore(todayOnly))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    final nextEvent = upcoming.isNotEmpty ? upcoming.first : null;
+    final dateStr = nextEvent != null ? DateFormat('d MMM').format(nextEvent.date) : null;
 
     return InkWell(
       onTap: onTap,
       splashFactory: NoSplash.splashFactory,
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -65,7 +69,7 @@ class OrganizerCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (dateStr != null) ...[
+                  if (nextEvent != null) ...[
                     const SizedBox(height: 4),
                     Text(
                       'Next Event:',
@@ -74,7 +78,7 @@ class OrganizerCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      eventTitle != null ? '$dateStr — $eventTitle' : dateStr,
+                      '$dateStr — ${nextEvent.title}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.caption.copyWith(

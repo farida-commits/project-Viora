@@ -1,5 +1,6 @@
 // lib/core/widgets/app_bottom_nav.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:viora/core/theme/app_colors.dart';
 
@@ -13,28 +14,45 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(horizontal: 42),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _NavIcon(
-            asset: 'assets/images/1.png',
-            active: current == AppTab.events,
-            onTap: () => onTap(AppTab.events),
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          height: 90,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/fon.png'),
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,
+            ),
           ),
-          _NavIcon(
-            asset: 'assets/images/2.png',
-            active: current == AppTab.organizers,
-            onTap: () => onTap(AppTab.organizers),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 42),
+            decoration: BoxDecoration(
+              color: AppColors.bgLevel1.withValues(alpha: 0.45),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _NavIcon(
+                  asset: 'assets/images/1.png',
+                  active: current == AppTab.events,
+                  onTap: () => onTap(AppTab.events),
+                ),
+                _NavIcon(
+                  asset: 'assets/images/2.png',
+                  active: current == AppTab.organizers,
+                  onTap: () => onTap(AppTab.organizers),
+                ),
+                _NavIcon(
+                  asset: 'assets/images/3.png',
+                  active: current == AppTab.settings,
+                  onTap: () => onTap(AppTab.settings),
+                ),
+              ],
+            ),
           ),
-          _NavIcon(
-            asset: 'assets/images/3.png',
-            active: current == AppTab.settings,
-            onTap: () => onTap(AppTab.settings),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -9,10 +9,11 @@ import 'package:viora/core/widgets/event_image.dart';
 import 'package:viora/features/events/domain/entities/event.dart';
 import 'package:viora/features/events/domain/entities/event_task.dart';
 import 'package:viora/features/events/presentation/screens/add_edit_event_screen.dart';
-import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
 import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
 import 'package:viora/providers/event_provider.dart';
 import 'package:viora/providers/organizer_provider.dart';
+import 'package:viora/features/organizers/domain/utils/organizer_events.dart';
+import 'package:viora/core/utils/slide_route.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   const EventDetailsScreen({super.key, required this.eventId});
@@ -43,14 +44,12 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
   }
 
   void _openEdit({int tab = 0}) async {
-    final provider = context.read<EventProvider>();
-    final event = provider.events.firstWhere((e) => e.id == widget.eventId);
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AddEditEventScreen(initial: event, initialTabIndex: tab),
-      ),
-    );
-  }
+  final provider = context.read<EventProvider>();
+  final event = provider.events.firstWhere((e) => e.id == widget.eventId);
+  await Navigator.of(context).push(
+    slideRoute(AddEditEventScreen(initial: event, initialTabIndex: tab)),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -474,6 +473,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
 
   Widget _buildOrganizersTab(Event event) {
     final allOrganizers = context.watch<OrganizerProvider>().organizers;
+    final eventProvider = context.watch<EventProvider>();
     final selected = allOrganizers.where((o) => event.organizerIds.contains(o.id)).toList();
 
     if (selected.isEmpty) {
@@ -500,11 +500,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             separatorBuilder: (_, __) => const Divider(color: AppColors.bgLevel2),
             itemBuilder: (_, i) {
               final o = selected[i];
-              final dateStr = o.nextEventDate != null
-                  ? DateFormat('d MMM').format(o.nextEventDate!)
-                  : null;
-              final nextEventId = o.currentEventIds.isNotEmpty ? o.currentEventIds.first : null;
-              final eventTitle = nextEventId != null ? mockEvents[nextEventId]?.title : null;
+              final nextEventText = organizerNextEventText(eventProvider, o.id);
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -521,10 +517,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
                             style: AppTextStyles.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                           ),
                           Text(o.name, style: AppTextStyles.body),
-                          if (dateStr != null) ...[
+                          if (nextEventText.isNotEmpty) ...[
                             Text('Next Event:', style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel2)),
                             Text(
-                              eventTitle != null ? '$dateStr — $eventTitle' : dateStr,
+                              nextEventText,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel2),

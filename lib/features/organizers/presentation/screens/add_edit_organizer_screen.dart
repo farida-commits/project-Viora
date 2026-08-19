@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:viora/core/theme/app_colors.dart';
@@ -85,17 +86,18 @@ class _AddEditOrganizerDialogState extends State<AddEditOrganizerDialog> {
   }
 
   bool get _isValid =>
-      _nameCtrl.text.trim().isNotEmpty &&
-      _roleCtrl.text.trim().isNotEmpty &&
-      _phoneCtrl.text.trim().isNotEmpty &&
-      _specCtrl.text.trim().isNotEmpty;
+    _nameCtrl.text.trim().isNotEmpty &&
+    _roleCtrl.text.trim().isNotEmpty &&
+    _phoneCtrl.text.trim().isNotEmpty &&
+    _photoPath != null;
 
-  bool get _hasChanges =>
-      _nameCtrl.text != _initialName ||
-      _roleCtrl.text != _initialRole ||
-      _phoneCtrl.text != _initialPhone ||
-      _specCtrl.text != _initialSpec ||
-      _photoPath != _initialPhoto;
+bool get _hasChanges =>
+    _nameCtrl.text != _initialName ||
+    _roleCtrl.text != _initialRole ||
+    _phoneCtrl.text != _initialPhone ||
+    _photoPath != _initialPhoto;
+
+  bool get _canSave => _isValid && (!_isEdit || _hasChanges);
 
   Future<void> _pickPhoto() async {
     final picker = ImagePicker();
@@ -128,15 +130,6 @@ class _AddEditOrganizerDialogState extends State<AddEditOrganizerDialog> {
     final provider = context.read<OrganizerProvider>();
 
     if (_isEdit) {
-      final updated = widget.organizer!.copyWith(
-        name: _nameCtrl.text.trim(),
-        position: _roleCtrl.text.trim(),
-        phone: _phoneCtrl.text.trim(),
-        specialization: _specCtrl.text.trim(),
-        photoPath: _photoPath,
-      );
-      // copyWith у нас с ?? — для сброса photoPath на null (удаление фото)
-      // copyWith не подходит, обновляем через новый Organizer напрямую:
       final result = Organizer(
         id: widget.organizer!.id,
         name: _nameCtrl.text.trim(),
@@ -201,7 +194,10 @@ class _AddEditOrganizerDialogState extends State<AddEditOrganizerDialog> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [const Color(0xFF1C1C1E), const Color.fromARGB(255, 36, 2, 43)],
+                  colors: [
+                    const Color(0xFF1C1C1E),
+                    const Color.fromARGB(255, 36, 2, 43),
+                  ],
                   stops: const [0.15, 1.0],
                 ),
               ),
@@ -213,89 +209,81 @@ class _AddEditOrganizerDialogState extends State<AddEditOrganizerDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-  onTap: _handleClose,
-  child: Container(
-    width: 36,
-    height: 36,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.white.withValues(alpha: 0.15),
-    ),
-    child: const Icon(
-      Icons.close,
-      color: AppColors.txtLevel1,
-      size: 18,
-    ),
-  ),
-),
-Text(
-  _isEdit ? 'Edit Organizer' : 'Add Organizer',
-  style: AppTextStyles.title,
-),
-GestureDetector(
-  onTap: _isValid ? _handleSave : null,
-  child: Container(
-    width: 36,
-    height: 36,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.white.withValues(alpha: 0.15),
-    ),
-    child: Center(
-      child: Image.asset(
-        'assets/images/save.png',
-        width: 18,
-        height: 18,
-        color: _isValid ? Colors.white : AppColors.txtLevel3,
-      ),
-    ),
-  ),
-),
+                        onTap: _handleClose,
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: AppColors.txtLevel1,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        _isEdit ? 'Edit Organizer' : 'Add Organizer',
+                        style: AppTextStyles.title,
+                      ),
+                      GestureDetector(
+                        onTap: _canSave ? _handleSave : null,
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.15),
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              'assets/images/save.png',
+                              width: 18,
+                              height: 18,
+                              color: _canSave
+                                  ? Colors.white
+                                  : AppColors.txtLevel3,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  SizedBox(height: 20,),
-                  GestureDetector(onTap: _photoPath != null ? null : _pickPhoto,
-                          child: Row(
-                            children: [
-_photoPath != null
-                                    ? Row(
-                                      children: [
-                                        OrganizerAvatar(
-                                            photoPath: _photoPath,
-                                            size: 36,
-                                          ),
-                                          SizedBox(width: 15,)
-                                      ],
-                                    )
-                                    :SizedBox(),
-                              Text(
-                                _photoPath != null
-                                    ? 'Delete Photo'
-                                    : 'Add Photo',
-                                style: AppTextStyles.body.copyWith(
-                                  color: _photoPath != null
-                                      ? AppColors.warning
-                                      : AppColors.txtLevel1,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: _photoPath != null
-                                    ? _deletePhoto
-                                    : _pickPhoto,
-                                child:  Image.asset(
-                                        'assets/images/photo.png',
-                                        width: 22,
-                                        height: 22,
-                                      ),
-                              ),
-                            ],
-                          ),),                  const SizedBox(height: 10),
-
-                                            const Divider(color: AppColors.bgLevel2, height: 1),
-
-
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: _photoPath != null ? _deletePhoto : _pickPhoto,
+                    child: Row(
+                      children: [
+                        if (_photoPath != null) ...[
+                          OrganizerAvatar(photoPath: _photoPath, size: 36),
+                          const SizedBox(width: 15),
+                        ],
+                        Text(
+                          _photoPath != null ? 'Delete Photo' : 'Add Photo',
+                          style: AppTextStyles.body.copyWith(
+                            color: _photoPath != null
+                                ? AppColors.warning
+                                : AppColors.txtLevel1,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (_photoPath == null)
+                          GestureDetector(
+                            onTap: _pickPhoto,
+                            child: Image.asset(
+                              'assets/images/photo.png',
+                              width: 22,
+                              height: 22,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(color: AppColors.bgLevel2, height: 1),
                   const SizedBox(height: 5),
                   _FormField(controller: _nameCtrl, hint: 'Name'),
                   const Divider(color: AppColors.bgLevel2, height: 1),
@@ -305,6 +293,9 @@ _photoPath != null
                     controller: _phoneCtrl,
                     hint: 'Phone',
                     keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                    ],
                   ),
                   const Divider(color: AppColors.bgLevel2, height: 1),
                   if (_isEdit) ...[
@@ -349,11 +340,13 @@ class _FormField extends StatelessWidget {
     required this.controller,
     required this.hint,
     this.keyboardType,
+    this.inputFormatters,
   });
 
   final TextEditingController controller;
   final String hint;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -362,6 +355,7 @@ class _FormField extends StatelessWidget {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         style: AppTextStyles.body.copyWith(color: AppColors.txtLevel1),
         decoration: InputDecoration(
           hintText: hint,
@@ -496,7 +490,6 @@ Future<bool?> _showConfirmDeletionAlert(BuildContext context) {
     barrierColor: Colors.black.withValues(alpha: 0.4),
     transitionDuration: const Duration(milliseconds: 150),
     pageBuilder: (context, animation, secondaryAnimation) {
-      // Сдвигаем контейнер чуть выше центра
       return Align(
         alignment: const Alignment(0, -0.15),
         child: Material(
@@ -525,14 +518,13 @@ Future<bool?> _showConfirmDeletionAlert(BuildContext context) {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Добавили отступ между частями текста через перенос строки с интервалом
                       Text(
                         "Once deleted, this can't be restored.\nProceed?",
                         textAlign: TextAlign.center,
                         style: AppTextStyles.footnote.copyWith(
                           color: AppColors.txtLevel2,
                           decoration: TextDecoration.none,
-                          height: 1.3, // Управляет межстрочным интервалом
+                          height: 1.3,
                         ),
                       ),
                     ],

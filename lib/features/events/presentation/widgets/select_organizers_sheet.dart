@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 import 'package:viora/providers/organizer_provider.dart';
+import 'package:viora/providers/event_provider.dart';
 import 'package:viora/features/organizers/domain/entities/organizer.dart';
 import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
-import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
+import 'package:viora/features/organizers/domain/utils/organizer_events.dart';
 
 /// Возвращает обновлённый список выбранных id организаторов,
 /// либо null если пользователь закрыл без сохранения.
@@ -205,40 +206,35 @@ class _OrganizerRow extends StatelessWidget {
   final bool checked;
   final VoidCallback onTap;
 
-    // 🔥 ФОРМАТТОО ФУНКЦИЯСЫ
-  String _getNextEventText(Organizer organizer) {
-    // 1. Датаны текшеребиз
-    if (organizer.nextEventDate == null) return '';
-    
-    // 2. Датаны форматтайбыз
-    final dateStr = DateFormat('d MMM').format(organizer.nextEventDate!);
-    
-    // 3. Ивенттин ID'син алабыз
-    final nextEventId = organizer.currentEventIds.isNotEmpty
-        ? organizer.currentEventIds.first
-        : null;
-    
-    // 4. Ивенттин атын алабыз (mockEvents ден)
-    String eventTitle = '';
-    if (nextEventId != null) {
-      try {
-        final event = mockEvents[nextEventId];
-        if (event != null) {
-          eventTitle = event.title;
-        }
-      } catch (e) {
-        // mockEvents жок болсо, катаны көз жаздырабыз
-      }
-    }
-    
-    // 5. Форматталган текстти кайтарабыз
-    return eventTitle.isNotEmpty 
-        ? '$dateStr — $eventTitle'  // "12 Jun — Alice & Tom Wedding"
-        : dateStr;                   // "12 Jun"
-  }
+  // String _getNextEventText(BuildContext context, Organizer organizer) {
+  //   if (organizer.nextEventDate == null) return '';
+
+  //   final dateStr = DateFormat('d MMM').format(organizer.nextEventDate!);
+
+  //   final nextEventId = organizer.currentEventIds.isNotEmpty
+  //       ? organizer.currentEventIds.first
+  //       : null;
+
+  //   String eventTitle = '';
+  //   if (nextEventId != null) {
+  //     final eventProvider = context.watch<EventProvider>();
+  //     final event =
+  //         eventProvider.events.where((e) => e.id == nextEventId).firstOrNull;
+  //     if (event != null) {
+  //       eventTitle = event.title;
+  //     }
+  //   }
+
+  //   return eventTitle.isNotEmpty
+  //       ? '$dateStr — $eventTitle'  // "12 Jun — Alice & Tom Wedding"
+  //       : dateStr;                   // "12 Jun"
+  // }
 
   @override
   Widget build(BuildContext context) {
+    final eventProvider = context.watch<EventProvider>();
+    final nextEventText = organizerNextEventText(eventProvider, organizer.id);
+
     return GestureDetector(
       onTap: onTap,
       child: Row(
@@ -282,7 +278,7 @@ class _OrganizerRow extends StatelessWidget {
                   style: AppTextStyles.body,
                 ),
                 SizedBox(height: 4,),
-                if (organizer.nextEventDate != null) ...[
+                if (nextEventText.isNotEmpty) ...[
                   Text(
                     'Next Event:',
                     style: AppTextStyles.caption.copyWith(
@@ -291,10 +287,10 @@ class _OrganizerRow extends StatelessWidget {
                   ),
                   SizedBox(height: 4,),
                   Text(
-                    _getNextEventText(organizer),
+                    nextEventText,
                     style: AppTextStyles.caption.copyWith(color: AppColors.txtLevel1),
                   )
-                ]
+                ],
               ],
             ),
           ),

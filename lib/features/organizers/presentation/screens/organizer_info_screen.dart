@@ -1,18 +1,22 @@
-// lib/features/organizers/presentation/screens/organizer_info_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
-import 'package:viora/features/organizers/data/mock/mock_organizer_events.dart';
-import 'package:viora/features/organizers/presentation/screens/add_edit_organizer_screen.dart';
+import 'package:viora/features/events/domain/entities/event.dart';
 import 'package:viora/features/organizers/presentation/widgets/calendar_widget.dart';
 import 'package:viora/features/organizers/domain/entities/organizer.dart';
-import 'package:viora/features/organizers/presentation/widgets/organizer_avatar.dart';
+import 'package:viora/features/organizers/domain/utils/organizer_events.dart';
+import 'package:viora/providers/event_provider.dart';
 import 'package:viora/providers/organizer_provider.dart';
 
 enum _InfoTab { current, history }
+
+/// Достаёт Event по id из общего списка событий. Возвращает null, если
+/// такого события больше нет (например, было удалено).
+Event? _findEvent(EventProvider provider, String id) {
+  return provider.events.where((e) => e.id == id).firstOrNull;
+}
 
 class OrganizerInfoScreen extends StatefulWidget {
   const OrganizerInfoScreen({super.key, required this.organizerId});
@@ -34,15 +38,8 @@ class _OrganizerInfoScreenState extends State<OrganizerInfoScreen> {
     super.didChangeDependencies();
     if (_initialized) return;
 
-    final organizer = context.read<OrganizerProvider>().getById(
-      widget.organizerId,
-    );
-    final currentEvents =
-        (organizer?.currentEventIds ?? const <String>[])
-            .map((id) => mockEvents[id])
-            .whereType<OrganizerMockEvent>()
-            .toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
+    final eventProvider = context.read<EventProvider>();
+    final currentEvents = organizerEvents(eventProvider, widget.organizerId);
 
     final initialDate = currentEvents.isNotEmpty
         ? currentEvents.first.date
@@ -61,6 +58,7 @@ class _OrganizerInfoScreenState extends State<OrganizerInfoScreen> {
     final organizer = context.watch<OrganizerProvider>().getById(
       widget.organizerId,
     );
+    final eventProvider = context.watch<EventProvider>();
 
     if (organizer == null || _displayedMonth == null) {
       return Scaffold(
@@ -71,10 +69,8 @@ class _OrganizerInfoScreenState extends State<OrganizerInfoScreen> {
       );
     }
 
-    final currentEvents = organizer.currentEventIds
-        .map((id) => mockEvents[id])
-        .whereType<OrganizerMockEvent>()
-        .toList();
+    // final eventProvider = context.watch<EventProvider>();
+    final currentEvents = organizerEvents(eventProvider, widget.organizerId);
 
     final displayedMonth = _displayedMonth!;
 
@@ -129,13 +125,9 @@ class _OrganizerInfoScreenState extends State<OrganizerInfoScreen> {
                         ],
                       ),
                       GestureDetector(
-                        onTap: () => showAddEditOrganizerDialog(
-                          context,
-                          organizer: organizer,
-                          onDeleted: () => Navigator.of(
-                            context,
-                          ).pop(), // вернуться к списку после удаления
-                        ),
+                        onTap: () {
+                          // TODO: открыть модалку Edit Organizer — следующий шаг
+                        },
                         child: Container(
                           width: 36,
                           height: 36,
@@ -268,10 +260,22 @@ class _OrganizerHeaderInfo extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        OrganizerAvatar(
-          photoPath: organizer.photoPath,
-          size: 80,
-          placeholderIconSize: 32,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 72,
+            height: 88,
+            color: AppColors.bgLevel2,
+            child: organizer.photoPath != null
+                ? Image.asset(organizer.photoPath!, fit: BoxFit.cover)
+                : Center(
+                    child: Image.asset(
+                      'assets/images/photo.png',
+                      width: 32,
+                      height: 32,
+                    ),
+                  ),
+          ),
         ),
       ],
     );
@@ -346,10 +350,16 @@ class _TabButton extends StatelessWidget {
 class _SelectedEventCard extends StatelessWidget {
   const _SelectedEventCard({required this.event});
 
-  final OrganizerMockEvent event;
+  final Event event;
+
+  String? get _timeRange =>
+      event.startTime != null && event.endTime != null
+          ? '${event.startTime}–${event.endTime}'
+          : null;
 
   @override
   Widget build(BuildContext context) {
+    final timeRange = _timeRange;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -360,9 +370,9 @@ class _SelectedEventCard extends StatelessWidget {
               DateFormat('d MMMM y').format(event.date),
               style: AppTextStyles.body,
             ),
-            if (event.timeRange != null)
+            if (timeRange != null)
               Text(
-                event.timeRange!,
+                timeRange,
                 style: AppTextStyles.footnote.copyWith(
                   color: AppColors.txtLevel2,
                 ),
@@ -391,10 +401,8 @@ class _EventsHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pastEvents = organizer.pastEventIds
-        .map((id) => mockPastEvents[id])
-        .whereType<OrganizerMockEvent>()
-        .toList();
+    final eventProvider = context.watch<EventProvider>();
+    final pastEvents = organizerEvents(eventProvider, organizer.id, pastOnly: true);
 
     if (pastEvents.isEmpty) {
       return Center(
@@ -405,7 +413,9 @@ class _EventsHistoryList extends StatelessWidget {
             children: [
               Text(
                 'No event history yet',
-                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -436,7 +446,7 @@ class _EventsHistoryList extends StatelessWidget {
 class _PastEventCard extends StatelessWidget {
   const _PastEventCard({required this.event});
 
-  final OrganizerMockEvent event;
+  final Event event;
 
   @override
   Widget build(BuildContext context) {
@@ -447,7 +457,7 @@ class _PastEventCard extends StatelessWidget {
         decoration: const BoxDecoration(color: AppColors.bgLevel2),
         child: Stack(
           children: [
-            // TODO: заменить на Image.asset(event.imagePath) когда появятся фото ивентов
+            // TODO: заменить на EventImage(path: event.photoAsset) когда есть фото
             Positioned.fill(child: Container(color: AppColors.bgLevel1)),
             Positioned(
               top: 10,

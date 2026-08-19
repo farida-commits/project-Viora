@@ -33,7 +33,6 @@ class _CapitalizeFirstLetterFormatter extends TextInputFormatter {
   }
 }
 
-// добавь в начало файла, рядом с _CapitalizeFirstLetterFormatter
 class _ThousandsSeparatorInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
@@ -517,20 +516,6 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
         onCancel: () => Navigator.pop(context),
         onSave: () => Navigator.pop(context, temp),
       ),
-    //   context: context,
-    //   backgroundColor: const Color(0xFF241729),
-    //   shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-    //   builder: (ctx) => _PickerSheet(
-    //     height: 220,
-    //     picker: CupertinoDatePicker(
-    //       mode: CupertinoDatePickerMode.time,
-    //       use24hFormat: true,
-    //       initialDateTime: temp,
-    //       onDateTimeChanged: (d) => temp = d,
-    //     ),
-    //     onCancel: () => Navigator.pop(ctx),
-    //     onSave: () => Navigator.pop(ctx, temp),
-    //   ),
     );
     if (result != null) {
       final formatted =

@@ -770,10 +770,13 @@ Future<bool> _confirmExit() async {
     );
 
     if (result == true && widget.initial != null) {
-      context.read<EventProvider>().remove(widget.initial!.id);
-      if (mounted) Navigator.of(context).pop();
-    }
+  context.read<EventProvider>().remove(widget.initial!.id);
+  if (mounted) {
+    Navigator.of(context).pop(); // закрыть EventDetailsScreen
+    Navigator.of(context).pop(); // вернуться на главный
   }
+}
+}
 
   @override
   Widget build(BuildContext context) {
@@ -1069,25 +1072,29 @@ Future<bool> _confirmExit() async {
           SizedBox(
             width: double.infinity,
             height: 44,
-            child: ElevatedButton.icon(
+            child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.warning,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
-              ),              
-              label: Text(
-                'Delete Event', 
-                style: AppTextStyles.body.copyWith(
-                color: Colors.white
-                ),
-              ),
+              ),    
               onPressed: _confirmDelete,
-              icon: Image.asset(
-                'assets/images/delete.png',
-                width: 20,
-                height: 20,
-                color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Delete Event',
+                    style: AppTextStyles.body.copyWith(color: Colors.white),
+                  ),
+                  const SizedBox(width: 8),
+                  Image.asset(
+                    'assets/images/delete.png',
+                    width: 20,
+                    height: 20,
+                    color: Colors.white,
+                  ),
+                ],
               ),
             ),
           ),

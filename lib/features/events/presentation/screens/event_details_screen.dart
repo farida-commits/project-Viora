@@ -381,7 +381,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: Center(
               child: Text(
                 'Add Your First Expense',
-                style: AppTextStyles.body.copyWith(color: AppColors.txtLevel2),
+                style: AppTextStyles.body.copyWith(color: Colors.white),
               ),
             ),
           ),
@@ -483,7 +483,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> {
             child: Center(
               child: Text(
                 'Add Your First Organizer',
-                style: AppTextStyles.body.copyWith(color: AppColors.txtLevel2),
+                style: AppTextStyles.body.copyWith(color: Colors.white),
               ),
             ),
           ),

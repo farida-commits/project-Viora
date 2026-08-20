@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:ui';
+import 'package:hive/hive.dart';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -174,7 +175,7 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
     _titleCtrl = TextEditingController(text: e?.title ?? '');
     _locationCtrl = TextEditingController(text: e?.location ?? '');
     _descCtrl = TextEditingController(text: e?.description ?? '');
-    _budgetCtrl = TextEditingController(text: e != null && e.budget > 0 ? e.budget.toStringAsFixed(0) : '');
+    _budgetCtrl = TextEditingController(text: e != null && e.budget > 0 ? e.budget.toStringAsFixed(0) : '');   
     _noteInputCtrl = TextEditingController();
 
     _photoPath = e?.photoAsset;
@@ -187,18 +188,24 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
       _tasks.addAll(e.tasks.map(_TaskDraft.fromEntity));
       _expenses.addAll(e.expenses.map(_ExpenseDraft.fromEntity));
       _organizerIds.addAll(e.organizerIds);
-    } 
+    } else {
+    _tasks.add(_TaskDraft(id: _newId()));
+    _expenses.add(_ExpenseDraft(id: _newId()));
+  }
 
     for (final c in [_titleCtrl, _locationCtrl, _descCtrl, _budgetCtrl]) {
-      c.addListener(_markDirty);
-    }
+    c.addListener(_markDirty);
+  }
 
     _budgetCtrl.addListener(_refreshBudget);
 
     for (final ex in _expenses) {
       ex.priceCtrl.addListener(_refreshBudget);
     }
-  }
+    for (final ex in _expenses) {
+      ex.priceCtrl.addListener(_refreshBudget);
+    }
+}
 
   void _refreshBudget() {
     if (mounted) setState(() {});
@@ -224,14 +231,23 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    if (kIsWeb) {
-      await _showWebPhotoAccessDialog();
+
+    final settingsBox = Hive.box('settings');
+    final accessGranted = settingsBox.get('photo_access_granted', defaultValue: false);
+
+     if (kIsWeb) {
+      if (!accessGranted) {
+        final proceed = await _showWebPhotoAccessDialog();
+        if (proceed != true) return;
+        await settingsBox.put('photo_access_granted', true);
+      }
+      await _pickImageFromWeb();
       return;
     }
 
     try {
       final picked = await ImagePicker().pickImage(
-        source: ImageSource.gallery, 
+        source: ImageSource.gallery,
         imageQuality: 85,
       );
       if (picked != null) {
@@ -341,8 +357,10 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
                   borderRadius: BorderRadius.zero,
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
+                final settingsBox = Hive.box('settings');
+                await settingsBox.put('photo_access_granted', true);
                 _pickImageFromWeb();
               },
               child: const Text(
@@ -641,9 +659,15 @@ Future<bool> _confirmExit() async {
       location: _locationCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       clientNotes: List.of(_clientNotes),
-      tasks: _tasks.map((t) => t.toEntity()).toList(),
+      tasks: _tasks
+        .where((t) => t.titleCtrl.text.trim().isNotEmpty)
+        .map((t) => t.toEntity())
+        .toList(),
       budget: double.tryParse(_budgetCtrl.text.replaceAll(',', '').trim()) ?? 0,
-      expenses: _expenses.map((e) => e.toEntity()).toList(),
+      expenses: _expenses
+        .where((ex) => ex.titleCtrl.text.trim().isNotEmpty)
+        .map((ex) => ex.toEntity())
+        .toList(),
       organizerIds: List.of(_organizerIds),
     );
 

@@ -25,10 +25,11 @@ void main() async {
 
   final eventBox = await Hive.openBox<EventModel>('events');
   final organizerBox = await Hive.openBox<OrganizerModel>('organizers');
+  await Hive.openBox('settings');
 
   final eventRepository = EventRepositoryImpl(eventBox);
   final organizerRepository = OrganizerRepositoryImpl(organizerBox);
-
+  
   runApp(
     MultiProvider(
       providers: [

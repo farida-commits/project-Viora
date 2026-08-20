@@ -1,9 +1,19 @@
 import 'dart:ui';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 
-void showRateAppDialog(BuildContext context) {
+void showRateAppDialog(BuildContext context) async {
+
+  final box = Hive.box('settings');
+  final alreadyShown = box.get('rate_shown', defaultValue: false);
+  if (alreadyShown) return;
+
+  await box.put('rate_shown', true);
+
+  if (!context.mounted) return;
+
   showDialog(
     context: context,
     barrierColor: Colors.black54,

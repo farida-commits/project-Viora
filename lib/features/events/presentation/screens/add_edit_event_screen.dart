@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:ui';
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -249,8 +250,9 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
   try {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked != null) {
+      final bytes = await picked.readAsBytes();
       setState(() {
-        _photoPath = picked.path;
+        _photoPath = 'base64:${base64Encode(bytes)}';
         _dirty = true;
       });
     }
@@ -655,24 +657,118 @@ Future<bool> _confirmExit() async {
   }
 
   Future<void> _confirmDelete() async {
-    final result = await showDialog<bool>(
+    final result = await showGeneralDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('Confirm Deletion', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          "Once deleted, this can't be restored. Proceed?",
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+      barrierLabel: 'Confirm Deletion',
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      transitionDuration: const Duration(milliseconds: 150),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: const Alignment(0, -0.15),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Container(
+              width: 270,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Confirm Deletion',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.txtLevel1,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Once deleted, this can't be restored.\nProceed?",
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.footnote.copyWith(
+                            color: AppColors.txtLevel2,
+                            decoration: TextDecoration.none,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(color: AppColors.bgLevel2, height: 1),
+                  SizedBox(
+                    height: 44,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 11,
+                              ),
+                              overlayColor: Colors.transparent,
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Color(0xff0A84FF),
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 44,
+                          color: AppColors.bgLevel2,
+                        ),
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 11,
+                              ),
+                              overlayColor: Colors.transparent,
+                            ),
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: AppColors.warning,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
+      },
     );
+
     if (result == true && widget.initial != null) {
       context.read<EventProvider>().remove(widget.initial!.id);
       if (mounted) Navigator.of(context).pop();
@@ -682,11 +778,20 @@ Future<bool> _confirmExit() async {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !_dirty,
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
-        if (await _confirmExit()) {
+        if (!_dirty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) Navigator.of(context).pop();
+        });
+        return;
+       }
+       final exit = await _confirmExit();
+        if (exit && mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) Navigator.of(context).pop();
+          });
         }
       },
       child: Scaffold(

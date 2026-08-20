@@ -180,19 +180,43 @@ class _OrganizerInfoScreenState extends State<OrganizerInfoScreen> {
                                   _selectedDate = null;
                                 }),
                               ),
-                              const SizedBox(height: 24),
-                              if (selectedDayEvent != null)
-                                _SelectedEventCard(event: selectedDayEvent)
-                              else
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 24,
-                                  ),
-                                  child: Text(
-                                    'No Events',
-                                    style: AppTextStyles.body.copyWith(
-                                      color: AppColors.txtLevel3,
-                                    ),
+                              const SizedBox(height: 16),
+                              const Divider(color: AppColors.bgLevel2, height: 1),
+                              const SizedBox(height: 16),
+                                ClipRRect(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 280),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    transitionBuilder: (child, animation) {
+                                      final offsetTween = Tween<Offset>(
+                                      begin: const Offset(0, 1),
+                                      end: Offset.zero,
+                                    );
+                                    return ClipRRect(
+                                      child: SlideTransition(
+                                        position: animation.drive(offsetTween),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                    child: selectedDayEvent != null
+                                        ? _SelectedEventCard(
+                                            key: ValueKey(selectedDayEvent.id),
+                                            event: selectedDayEvent,
+                                          )
+                                        : Padding(
+                                          key: const ValueKey('empty'),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 24,
+                                          ),
+                                          child: Text(
+                                            'No Events',
+                                            style: AppTextStyles.body.copyWith(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
                                   ),
                                 ),
                             ],
@@ -348,7 +372,7 @@ class _TabButton extends StatelessWidget {
 }
 
 class _SelectedEventCard extends StatelessWidget {
-  const _SelectedEventCard({required this.event});
+  const _SelectedEventCard({super.key, required this.event});
 
   final Event event;
 

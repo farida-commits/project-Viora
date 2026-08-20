@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:viora/core/theme/app_colors.dart';
 import 'package:viora/core/theme/app_text_styles.dart';
 import 'package:viora/core/widgets/app_bottom_nav.dart';
+import 'package:viora/core/utils/slide_route.dart';
 import 'package:viora/features/events/presentation/screens/events_main_screen.dart';
 import 'package:viora/features/organizers/presentation/screens/organizers_main_screen.dart';
 
@@ -14,12 +15,12 @@ class SettingsScreen extends StatelessWidget {
     switch (tab) {
       case AppTab.events:
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const EventsMainScreen()),
+          slideRoute(const EventsMainScreen(), fromRight: false),
         );
         break;
       case AppTab.organizers:
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OrganizersMainScreen()),
+          slideRoute(const OrganizersMainScreen(), fromRight: false),
         );
         break;
       case AppTab.settings:

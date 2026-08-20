@@ -21,11 +21,23 @@ Future<void> showAddEditOrganizerDialog(
   Organizer? organizer,
   VoidCallback? onDeleted,
 }) {
-  return showDialog(
+  return showGeneralDialog(
     context: context,
+    barrierDismissible: false,
     barrierColor: Colors.black54,
-    builder: (_) =>
-        AddEditOrganizerDialog(organizer: organizer, onDeleted: onDeleted),
+    barrierLabel: '',
+    transitionDuration: const Duration(milliseconds: 300),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return AddEditOrganizerDialog(organizer: organizer, onDeleted: onDeleted);
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child){
+      final tween = Tween(begin: const Offset(0, 1), end: Offset.zero)
+        .chain(CurveTween(curve: Curves.easeOutCubic));
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: child,
+      );
+    }
   );
 }
 
@@ -179,153 +191,161 @@ bool get _hasChanges =>
           Navigator.of(context).pop();
         }
       },
-      child: Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-            child: Container(
-              width: 343,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+      child: Material(
+        color: Colors.transparent,
+        child: Align(
+          alignment: Alignment.center,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF1C1C1E),
-                    const Color.fromARGB(255, 36, 2, 43),
-                  ],
-                  stops: const [0.15, 1.0],
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: _handleClose,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: AppColors.txtLevel1,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        _isEdit ? 'Edit Organizer' : 'Add Organizer',
-                        style: AppTextStyles.title,
-                      ),
-                      GestureDetector(
-                        onTap: _canSave ? _handleSave : null,
-                        child: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          child: Center(
-                            child: Image.asset(
-                              'assets/images/save.png',
-                              width: 18,
-                              height: 18,
-                              color: _canSave
-                                  ? Colors.white
-                                  : AppColors.txtLevel3,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: _photoPath != null ? _deletePhoto : _pickPhoto,
-                    child: Row(
-                      children: [
-                        if (_photoPath != null) ...[
-                          OrganizerAvatar(photoPath: _photoPath, size: 36),
-                          const SizedBox(width: 15),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    width: 343,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          const Color(0xFF1C1C1E),
+                          const Color.fromARGB(255, 36, 2, 43),
                         ],
-                        Text(
-                          _photoPath != null ? 'Delete Photo' : 'Add Photo',
-                          style: AppTextStyles.body.copyWith(
-                            color: _photoPath != null
-                                ? AppColors.warning
-                                : AppColors.txtLevel1,
-                            fontWeight: FontWeight.w600,
+                        stops: const [0.15, 1.0],
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: _handleClose,
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: AppColors.txtLevel1,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              _isEdit ? 'Edit Organizer' : 'Add Organizer',
+                              style: AppTextStyles.title,
+                            ),
+                            GestureDetector(
+                              onTap: _canSave ? _handleSave : null,
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                                child: Center(
+                                  child: Image.asset(
+                                    'assets/images/save.png',
+                                    width: 18,
+                                    height: 18,
+                                    color: _canSave
+                                        ? Colors.white
+                                        : AppColors.txtLevel3,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: _photoPath != null ? _deletePhoto : _pickPhoto,
+                          child: Row(
+                            children: [
+                              if (_photoPath != null) ...[
+                                OrganizerAvatar(photoPath: _photoPath, size: 36),
+                                const SizedBox(width: 15),
+                              ],
+                              Text(
+                                _photoPath != null ? 'Delete Photo' : 'Add Photo',
+                                style: AppTextStyles.body.copyWith(
+                                  color: _photoPath != null
+                                      ? AppColors.warning
+                                      : AppColors.txtLevel1,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (_photoPath == null)
+                                GestureDetector(
+                                  onTap: _pickPhoto,
+                                  child: Image.asset(
+                                    'assets/images/photo.png',
+                                    width: 22,
+                                    height: 22,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        const Spacer(),
-                        if (_photoPath == null)
-                          GestureDetector(
-                            onTap: _pickPhoto,
-                            child: Image.asset(
-                              'assets/images/photo.png',
-                              width: 22,
-                              height: 22,
+                        const SizedBox(height: 10),
+                        const Divider(color: AppColors.bgLevel2, height: 1),
+                        const SizedBox(height: 5),
+                        _FormField(controller: _nameCtrl, hint: 'Name'),
+                        const Divider(color: AppColors.bgLevel2, height: 1),
+                        _FormField(controller: _roleCtrl, hint: 'Role'),
+                        const Divider(color: AppColors.bgLevel2, height: 1),
+                        _FormField(
+                          controller: _phoneCtrl,
+                          hint: 'Phone',
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                          ],
+                        ),
+                        const Divider(color: AppColors.bgLevel2, height: 1),
+                        if (_isEdit) ...[
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _handleDelete,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.warning,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              label: Text(
+                                'Delete Organizer',
+                                style: AppTextStyles.buttonText.copyWith(
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
+                        ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  const Divider(color: AppColors.bgLevel2, height: 1),
-                  const SizedBox(height: 5),
-                  _FormField(controller: _nameCtrl, hint: 'Name'),
-                  const Divider(color: AppColors.bgLevel2, height: 1),
-                  _FormField(controller: _roleCtrl, hint: 'Role'),
-                  const Divider(color: AppColors.bgLevel2, height: 1),
-                  _FormField(
-                    controller: _phoneCtrl,
-                    hint: 'Phone',
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
-                    ],
-                  ),
-                  const Divider(color: AppColors.bgLevel2, height: 1),
-                  if (_isEdit) ...[
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _handleDelete,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.warning,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        icon: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        label: Text(
-                          'Delete Organizer',
-                          style: AppTextStyles.buttonText.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
@@ -549,7 +569,7 @@ Future<bool?> _showConfirmDeletionAlert(BuildContext context) {
                           child: const Text(
                             'Cancel',
                             style: TextStyle(
-                              color: Color(0xFF0A84FF),
+                              color: Color(0xff0A84FF),
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.none,
                             ),

@@ -57,10 +57,6 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
   }
 }
 
-  void _onAddTap() {
-    // TODO: переход на Add / Edit Event
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<EventProvider>();
@@ -154,7 +150,9 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                           ),
                         ),
                         const SizedBox(width: 12,),
-                        _AddButton(onTap: () {
+                        _AddButton(onTap: () async {
+                          await precacheImage(const AssetImage('assets/images/fon.png'), context);
+                          if (!context.mounted) return;
                           Navigator.of(context).push(
                             slideRoute(const AddEditEventScreen()),
                           );
@@ -170,7 +168,9 @@ class _EventsMainScreenState extends State<EventsMainScreen> {
                         Text(
                           'EVENTS',
                           style: AppTextStyles.headline),
-                          _AddButton(onTap: () {
+                          _AddButton(onTap: () async {
+                            await precacheImage(const AssetImage('assets/images/fon.png'), context);
+                            if (!context.mounted) return;
                             Navigator.of(context).push(
                               slideRoute(const AddEditEventScreen()),
                             );

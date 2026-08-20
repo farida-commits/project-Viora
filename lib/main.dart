@@ -1,5 +1,4 @@
-// lib/main.dart
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +14,12 @@ import 'features/organizers/data/repositories/organizer_repository_impl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Hive.initFlutter();
+  
+  // ВРЕМЕННО: удалить старую базу данных
+  await Hive.deleteFromDisk();
+  print('Старая база данных удалена');
 
   Hive.registerAdapter(EventTaskStatusModelAdapter());
   Hive.registerAdapter(EventTaskModelAdapter());
@@ -26,6 +30,9 @@ void main() async {
   final eventBox = await Hive.openBox<EventModel>('events');
   final organizerBox = await Hive.openBox<OrganizerModel>('organizers');
   await Hive.openBox('settings');
+
+  print('Events in box: ${eventBox.length}');
+  print('Organizers in box: ${organizerBox.length}');
 
   final eventRepository = EventRepositoryImpl(eventBox);
   final organizerRepository = OrganizerRepositoryImpl(organizerBox);

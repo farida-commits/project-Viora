@@ -11,7 +11,11 @@ class EventRepositoryImpl implements EventRepository {
   final Box<EventModel> _box;
 
   @override
-  List<Event> getAll() => _box.values.map((m) => m.toEntity()).toList();
+  List<Event> getAll() {
+    final events = _box.values.map((m) => m.toEntity()).toList();
+    print('Getting all events: ${events.length}');
+    return events;
+  }
 
   @override
   Event? getById(String id) {
@@ -23,11 +27,17 @@ class EventRepositoryImpl implements EventRepository {
   Future<void> add(Event event) async {
     final model = EventModel.fromEntity(event);
     await _box.put(model.id, model);
+    await _box.flush();
+    print('Event added: ${model.id}, total in box: ${_box.length}');
   }
 
-  @override
+ @override
   Future<void> update(Event event) => add(event);
 
   @override
-  Future<void> delete(String id) => _box.delete(id);
+  Future<void> delete(String id) async {
+    await _box.delete(id);
+    await _box.flush();
+    print('Event deleted: $id, total in box: ${_box.length}');
+  }
 }

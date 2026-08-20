@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.viora"
-    compileSdk = 37
+    compileSdk = 34  // Изменили с 37 на 34
 
     sourceSets {
         main {
@@ -27,7 +27,7 @@ android {
     defaultConfig {
         applicationId = "com.example.viora"
         minSdk = flutter.minSdkVersion
-        targetSdk = 37
+        targetSdk = 34  // Изменили с 37 на 34
         versionCode = 1
         versionName = "1.0.0"
     }

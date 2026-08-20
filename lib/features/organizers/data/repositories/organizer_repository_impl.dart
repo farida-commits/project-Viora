@@ -11,7 +11,11 @@ class OrganizerRepositoryImpl implements OrganizerRepository {
   final Box<OrganizerModel> _box;
 
   @override
-  List<Organizer> getAll() => _box.values.map((m) => m.toEntity()).toList();
+  List<Organizer> getAll() {
+    final organizers = _box.values.map((m) => m.toEntity()).toList();
+    print('Getting all organizers: ${organizers.length}');
+    return organizers;
+  }
 
   @override
   Organizer? getById(String id) {
@@ -23,11 +27,17 @@ class OrganizerRepositoryImpl implements OrganizerRepository {
   Future<void> add(Organizer organizer) async {
     final model = OrganizerModel.fromEntity(organizer);
     await _box.put(model.id, model);
+    await _box.flush();
+    print('Organizer added: ${model.id}, total in box: ${_box.length}');
   }
 
   @override
   Future<void> update(Organizer organizer) => add(organizer);
 
   @override
-  Future<void> delete(String id) => _box.delete(id);
+  Future<void> delete(String id) async {
+    await _box.delete(id);
+    await _box.flush();
+    print('Organizer deleted: $id, total in box: ${_box.length}');
+  }
 }

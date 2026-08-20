@@ -1,5 +1,3 @@
-// lib/features/events/data/models/expense_model.dart
-
 import 'package:hive/hive.dart';
 import '../../domain/entities/expense.dart';
 
@@ -15,16 +13,16 @@ class ExpenseModel extends HiveObject {
   });
 
   @HiveField(0)
-  final String id;
+  String id;  // Убрали final
 
   @HiveField(1)
-  final String title;
+  String title;  // Убрали final
 
   @HiveField(2)
-  final double price;
+  double price;  // Убрали final
 
   @HiveField(3)
-  final DateTime? date;
+  DateTime? date;  // Убрали final
 
   Expense toEntity() => Expense(id: id, title: title, price: price, date: date);
 

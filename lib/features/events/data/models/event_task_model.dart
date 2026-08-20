@@ -1,5 +1,3 @@
-// lib/features/events/data/models/event_task_model.dart
-
 import 'package:hive/hive.dart';
 import '../../domain/entities/event_task.dart';
 
@@ -25,16 +23,16 @@ class EventTaskModel extends HiveObject {
   });
 
   @HiveField(0)
-  final String id;
+  String id;  // Убрали final
 
   @HiveField(1)
-  final String title;
+  String title;  // Убрали final
 
   @HiveField(2)
-  final DateTime? date;
+  DateTime? date;  // Убрали final
 
   @HiveField(3)
-  final EventTaskStatusModel status;
+  EventTaskStatusModel status;  // Убрали final
 
   EventTask toEntity() => EventTask(
         id: id,
